@@ -5,6 +5,7 @@ from enum import Enum
 
 
 class Category(Enum):
+    """Available expense categories."""
     FOOD = "food"
     TRANSPORT = "transport"
     BILLS = "bills"
@@ -13,6 +14,7 @@ class Category(Enum):
 
 @dataclass
 class Expense:
+    """An expense with its amount, category, description, and date."""
     amount: Decimal
     category: Category
     description: str
@@ -20,6 +22,7 @@ class Expense:
 
 
 def display_menu() -> None:
+    """Display the main menu."""
     print("=== EXPENSE TRACKER ===\n"
           "1. Add expense\n"
           "2. List expenses\n"
@@ -28,6 +31,7 @@ def display_menu() -> None:
           "5. Save and exit\n")
 
 def get_user_choice() -> int:
+    """Prompt until the user selects a valid menu option."""
     while True:
         try:
             choice = int(input("Enter option number (1-5): "))
@@ -42,6 +46,7 @@ def get_user_choice() -> int:
 
 
 def get_amount() -> Decimal:
+    """Prompt for a positive amount with at most two decimal places."""
     while True:
         try:
             user_amount = Decimal(input("Enter amount: "))
@@ -62,6 +67,7 @@ def get_amount() -> Decimal:
 
 
 def get_category() -> Category:
+    """Prompt until the user enters a valid expense category."""
     while True:
         print("Available categories:")
         print(", ".join(category.value for category in Category))
@@ -73,6 +79,7 @@ def get_category() -> Category:
 
 
 def get_description() -> str:
+    """Prompt for a non-empty expense description."""
     while True:
         user_description = input("Enter description: ").strip()
 
@@ -84,6 +91,7 @@ def get_description() -> str:
 
 
 def get_expense_date() -> date:
+    """Prompt until the user enters a valid expense date."""
     while True:
         try:
             user_date = input("Enter expense date (YYYY-MM-DD): ").strip()
@@ -97,6 +105,7 @@ def add_expense(amount: Decimal,
                 category: Category,
                 description: str,
                 expense_date: date) -> Expense:
+    """Create and return an expense."""
     return Expense(amount=amount,
                    category=category,
                    description=description,
@@ -104,12 +113,14 @@ def add_expense(amount: Decimal,
 
 
 def format_expense(expense: Expense) -> str:
+    """Format an expense as a readable string."""
     return (f"amount: {expense.amount:.2f}\n"
             f"category: {expense.category.value}\n"
             f"description: {expense.description}\n"
             f"expense_date: {expense.expense_date}\n")
 
 def list_expenses(expenses: list[Expense]) -> None:
+    """Display all expenses or a message if the list is empty."""
     if not expenses:
         print("No expenses added.")
     for e in expenses:
@@ -117,6 +128,7 @@ def list_expenses(expenses: list[Expense]) -> None:
 
 
 def main():
+    """Run the expense tracker menu loop."""
     expenses: list[Expense] = []
 
     while True:
