@@ -50,6 +50,11 @@ def get_amount() -> Decimal:
                 print("Invalid amount. Please enter a number greater than zero.")
                 continue
 
+            if user_amount.as_tuple().exponent < -2:
+                print("Invalid amount. Please enter a maximum of 2 decimal places.")
+
+                continue
+
             return user_amount
 
         except InvalidOperation:
