@@ -52,7 +52,6 @@ def get_amount() -> Decimal:
 
             if user_amount.as_tuple().exponent < -2:
                 print("Invalid amount. Please enter a maximum of 2 decimal places.")
-
                 continue
 
             return user_amount
@@ -104,11 +103,26 @@ def add_expense(amount: Decimal,
                    expense_date=expense_date)
 
 
+def format_expense(expense: Expense) -> str:
+    return (f"amount: {expense.amount:.2f}\n"
+            f"category: {expense.category.value}\n"
+            f"description: {expense.description}\n"
+            f"expense_date: {expense.expense_date}\n")
+
+def list_expenses(expenses: list[Expense]) -> None:
+    if not expenses:
+        print("No expenses added.")
+    for e in expenses:
+        print(format_expense(e))
+
+
 def main():
     expenses: list[Expense] = []
+
     while True:
         display_menu()
         user_choice = get_user_choice()
+
         if user_choice == 1:
             amount = get_amount()
             category = get_category()
@@ -117,8 +131,10 @@ def main():
             expense = add_expense(amount, category, description, expense_date)
             expenses.append(expense)
             print("Expense added successfully.")
+
         elif user_choice == 2:
-            print("Feature not implemented yet.")
+            list_expenses(expenses)
+
         elif user_choice == 3:
             print("Feature not implemented yet.")
         elif user_choice == 4:
