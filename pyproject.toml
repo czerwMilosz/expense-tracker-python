@@ -1,0 +1,18 @@
+[project]
+name = "expense-tracker-python"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "czerwMilosz",email = "czerw.milosz@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[tool.poetry]
+packages = [{include = "expense_tracker_python", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
