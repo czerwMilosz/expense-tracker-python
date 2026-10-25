@@ -1,3 +1,24 @@
+from dataclasses import dataclass
+from decimal import Decimal
+from datetime import date
+from enum import Enum
+
+
+class Category(Enum):
+    FOOD = "food"
+    TRANSPORT = "transport"
+    BILLS = "bills"
+    ENTERTAINMENT = "entertainment"
+
+
+@dataclass
+class Expense:
+    amount: Decimal
+    category: Category
+    description: str
+    date: date
+
+
 def display_menu():
     print("=== EXPENSE TRACKER ===\n"
           "1. Add expense\n"
