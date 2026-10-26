@@ -52,7 +52,7 @@ def get_amount() -> Decimal:
             user_amount = Decimal(input("Enter amount: "))
 
             if not user_amount.is_finite() or user_amount <= 0:
-                print("Invalid amount. Please enter a number greater than zero.")
+                print("Invalid amount. Please enter a valid amount greater than zero.")
                 continue
 
             if user_amount.as_tuple().exponent < -2:
@@ -113,7 +113,7 @@ def add_expense(amount: Decimal,
 
 
 def format_expense(expense: Expense) -> str:
-    """Format an expense as a readable string."""
+    """Format an expense as a multiline string."""
     return (f"amount: {expense.amount:.2f}\n"
             f"category: {expense.category.value}\n"
             f"description: {expense.description}\n"
@@ -125,6 +125,33 @@ def list_expenses(expenses: list[Expense]) -> None:
         print("No expenses added.")
     for e in expenses:
         print(format_expense(e))
+
+
+def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal]:
+    """Calculate expense totals grouped by category."""
+    category_totals: dict[Category, Decimal] = {}
+    for e in expenses:
+        category_totals[e.category] = category_totals.get(e.category, Decimal("0")) + e.amount
+    return category_totals
+
+
+def calculate_total(category_totals: dict[Category, Decimal]) -> Decimal:
+    """Calculate the overall total from category totals."""
+    return sum(category_totals.values(), Decimal("0"))
+
+
+def display_category_totals(category_totals: dict[Category, Decimal]) -> None:
+    """Display category totals and the overall total, or a message if empty."""
+    if not category_totals:
+        print("\nNo expenses added.\n")
+        return
+
+    print("\n=== SUMMARY BY CATEGORY ===")
+    for category, amount in category_totals.items():
+        print(f"{category.value}: {amount:.2f} PLN")
+    print("---------------------------")
+    print(f"TOTAL: {calculate_total(category_totals):.2f} PLN\n")
+
 
 
 def main():
@@ -148,13 +175,16 @@ def main():
             list_expenses(expenses)
 
         elif user_choice == 3:
-            print("Feature not implemented yet.")
+            category_totals = calculate_category_totals(expenses)
+            print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
+
         elif user_choice == 4:
-            print("Feature not implemented yet.")
+            category_totals = calculate_category_totals(expenses)
+            display_category_totals(category_totals)
+
         elif user_choice == 5:
             print("Exiting...")
             break
-
 
 
 if __name__ == "__main__":
