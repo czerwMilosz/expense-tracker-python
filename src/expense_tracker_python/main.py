@@ -52,7 +52,7 @@ def get_amount() -> Decimal:
             user_amount = Decimal(input("Enter amount: "))
 
             if not user_amount.is_finite() or user_amount <= 0:
-                print("Invalid amount. Please enter a number greater than zero.")
+                print("Invalid amount. Please enter a valid amount greater than zero.")
                 continue
 
             if user_amount.as_tuple().exponent < -2:
@@ -127,6 +127,30 @@ def list_expenses(expenses: list[Expense]) -> None:
         print(format_expense(e))
 
 
+def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal]:
+    category_totals: dict[Category, Decimal] = {}
+    for e in expenses:
+        category_totals[e.category] = category_totals.get(e.category, Decimal("0")) + e.amount
+    return category_totals
+
+
+def calculate_total(category_totals: dict[Category, Decimal]) -> Decimal:
+    return sum(category_totals.values(), Decimal("0"))
+
+
+def display_category_totals(category_totals: dict[Category, Decimal]) -> None:
+    if not category_totals:
+        print("\nNo expenses added.\n")
+        return
+
+    print("\n=== SUMMARY BY CATEGORY ===")
+    for category, amount in category_totals.items():
+        print(f"{category.value}: {amount:.2f} PLN")
+    print("---------------------------")
+    print(f"TOTAL: {calculate_total(category_totals):.2f} PLN\n")
+
+
+
 def main():
     """Run the expense tracker menu loop."""
     expenses: list[Expense] = []
@@ -148,13 +172,16 @@ def main():
             list_expenses(expenses)
 
         elif user_choice == 3:
-            print("Feature not implemented yet.")
+            category_totals = calculate_category_totals(expenses)
+            print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
+
         elif user_choice == 4:
-            print("Feature not implemented yet.")
+            category_totals = calculate_category_totals(expenses)
+            display_category_totals(category_totals)
+
         elif user_choice == 5:
             print("Exiting...")
             break
-
 
 
 if __name__ == "__main__":
