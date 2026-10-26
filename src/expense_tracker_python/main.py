@@ -113,7 +113,7 @@ def add_expense(amount: Decimal,
 
 
 def format_expense(expense: Expense) -> str:
-    """Format an expense as a readable string."""
+    """Format an expense as a multiline string."""
     return (f"amount: {expense.amount:.2f}\n"
             f"category: {expense.category.value}\n"
             f"description: {expense.description}\n"
@@ -128,6 +128,7 @@ def list_expenses(expenses: list[Expense]) -> None:
 
 
 def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal]:
+    """Calculate expense totals grouped by category."""
     category_totals: dict[Category, Decimal] = {}
     for e in expenses:
         category_totals[e.category] = category_totals.get(e.category, Decimal("0")) + e.amount
@@ -135,10 +136,12 @@ def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal
 
 
 def calculate_total(category_totals: dict[Category, Decimal]) -> Decimal:
+    """Calculate the overall total from category totals."""
     return sum(category_totals.values(), Decimal("0"))
 
 
 def display_category_totals(category_totals: dict[Category, Decimal]) -> None:
+    """Display category totals and the overall total, or a message if empty."""
     if not category_totals:
         print("\nNo expenses added.\n")
         return
