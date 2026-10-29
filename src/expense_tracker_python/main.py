@@ -1,16 +1,24 @@
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from datetime import date
-from enum import Enum
+from enum import IntEnum
 
 
-class Category(Enum):
+class Category(IntEnum):
     """Available expense categories."""
-    FOOD = "food"
-    TRANSPORT = "transport"
-    BILLS = "bills"
-    ENTERTAINMENT = "entertainment"
+    FOOD = 1
+    TRANSPORT = 2
+    BILLS = 3
+    ENTERTAINMENT = 4
 
+
+class MenuOption(IntEnum):
+    """Available menu options."""
+    ADD_EXPENSE = 1
+    LIST_EXPENSE = 2
+    SHOW_TOTAL = 3
+    SUMMARY_BY_CATEGORY = 4
+    SAVE_AND_EXIT = 5
 
 @dataclass
 class Expense:
@@ -19,6 +27,15 @@ class Expense:
     category: Category
     description: str
     expense_date: date
+
+    def __str__(self) -> str:
+        """Format an expense as a multiline string."""
+
+        return (f"amount: {self.amount:.2f}\n"
+                f"category: {self.category.name.lower()}\n"
+                f"description: {self.description}\n"
+                f"expense_date: {self.expense_date}\n")
+
 
 
 def display_menu() -> None:
@@ -30,19 +47,14 @@ def display_menu() -> None:
           "4. Summary by category\n"
           "5. Save and exit\n")
 
-def get_user_choice() -> int:
+def get_user_choice() -> MenuOption:
     """Prompt until the user selects a valid menu option."""
     while True:
         try:
-            choice = int(input("Enter option number (1-5): "))
-
-            if choice in range(1, 6):
-                return choice
-            else:
-                print("Invalid choice. Please select an option between 1 and 5.")
-
+            choice = MenuOption(int(input(F"Enter option number (1-{len(MenuOption)}): ")))
+            return choice
         except ValueError:
-            print("Invalid input. Please enter a number.")
+            print("Invalid input. Please enter option from the list.")
 
 
 def get_amount() -> Decimal:
@@ -70,9 +82,11 @@ def get_category() -> Category:
     """Prompt until the user enters a valid expense category."""
     while True:
         print("Available categories:")
-        print(", ".join(category.value for category in Category))
+        for category in Category:
+            print(f"{category.value}: {category.name}")
         try:
-            user_category = Category(input("Enter category: ").strip().lower())
+            user_category = Category(int(
+                input(f"Enter category number (1-{len(Category)}): ")))
             return user_category
         except ValueError:
             print("Invalid input. Please enter category from the list.")
@@ -112,25 +126,21 @@ def add_expense(amount: Decimal,
                    expense_date=expense_date)
 
 
-def format_expense(expense: Expense) -> str:
-    """Format an expense as a multiline string."""
-    return (f"amount: {expense.amount:.2f}\n"
-            f"category: {expense.category.value}\n"
-            f"description: {expense.description}\n"
-            f"expense_date: {expense.expense_date}\n")
-
 def list_expenses(expenses: list[Expense]) -> None:
     """Display all expenses or a message if the list is empty."""
     if not expenses:
         print("No expenses added.")
     for e in expenses:
-        print(format_expense(e))
+        print(e)
+
+    # wyswietlic 10 i klikac enter dalej i wyswietlac kolejne 10 rezultatow
+    # paginacja
 
 
 def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal]:
     """Calculate expense totals grouped by category."""
     category_totals: dict[Category, Decimal] = {}
-    for e in expenses:
+    for e in expenses: #suma po kluczu
         category_totals[e.category] = category_totals.get(e.category, Decimal("0")) + e.amount
     return category_totals
 
@@ -148,7 +158,7 @@ def display_category_totals(category_totals: dict[Category, Decimal]) -> None:
 
     print("\n=== SUMMARY BY CATEGORY ===")
     for category, amount in category_totals.items():
-        print(f"{category.value}: {amount:.2f} PLN")
+        print(f"{category.name.lower()}: {amount:.2f} PLN")
     print("---------------------------")
     print(f"TOTAL: {calculate_total(category_totals):.2f} PLN\n")
 
@@ -156,36 +166,41 @@ def display_category_totals(category_totals: dict[Category, Decimal]) -> None:
 
 def main():
     """Run the expense tracker menu loop."""
+    #jedna funkcja jedna odpowiedzialnosc
+
     expenses: list[Expense] = []
 
     while True:
         display_menu()
         user_choice = get_user_choice()
+        match user_choice:
+            case MenuOption.ADD_EXPENSE: #INT ENUM, MATCHING PATTERN
+                amount = get_amount()
+                category = get_category()
+                description = get_description()
+                expense_date = get_expense_date()
+                expense = add_expense(amount, category, description, expense_date)
+                expenses.append(expense)
+                print("Expense added successfully.")
 
-        if user_choice == 1:
-            amount = get_amount()
-            category = get_category()
-            description = get_description()
-            expense_date = get_expense_date()
-            expense = add_expense(amount, category, description, expense_date)
-            expenses.append(expense)
-            print("Expense added successfully.")
+            case MenuOption.LIST_EXPENSE:
+                list_expenses(expenses)
 
-        elif user_choice == 2:
-            list_expenses(expenses)
+            case MenuOption.SHOW_TOTAL:
+                category_totals = calculate_category_totals(expenses)
+                print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
 
-        elif user_choice == 3:
-            category_totals = calculate_category_totals(expenses)
-            print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
+            case MenuOption.SUMMARY_BY_CATEGORY:
+                category_totals = calculate_category_totals(expenses)
+                display_category_totals(category_totals)
 
-        elif user_choice == 4:
-            category_totals = calculate_category_totals(expenses)
-            display_category_totals(category_totals)
-
-        elif user_choice == 5:
-            print("Exiting...")
-            break
+            case MenuOption.SAVE_AND_EXIT:
+                print("Exiting...")
+                break
 
 
 if __name__ == "__main__":
     main()
+
+#przy eksporterach popracowach z abstrakcyjnymi klasami
+# wzorzec abstrakcyjnej fabryki
