@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from datetime import date
-from enum import IntEnum
+from enum import IntEnum, auto
+import math
 
+USER_NUMBER_SHIFT = 1
 
 class Category(IntEnum):
     """Available expense categories."""
@@ -19,6 +21,26 @@ class MenuOption(IntEnum):
     SHOW_TOTAL = 3
     SUMMARY_BY_CATEGORY = 4
     SAVE_AND_EXIT = 5
+
+    def __str__(self) -> str:
+        return f"{self.value} - {self.name.replace('_', ' ').title()}"
+
+
+
+class Navigation(IntEnum):
+    PREVIOUS = auto()
+    NEXT = auto()
+    EXIT = auto()
+
+    @property
+    def description(self) -> str:
+        return {
+            Navigation.PREVIOUS: "Poprzednia strona",
+            Navigation.NEXT: "Nastepna strona",
+            Navigation.EXIT: "Wyjscie",
+        }[self]
+
+
 
 @dataclass
 class Expense:
@@ -40,18 +62,15 @@ class Expense:
 
 def display_menu() -> None:
     """Display the main menu."""
-    print("=== EXPENSE TRACKER ===\n"
-          "1. Add expense\n"
-          "2. List expenses\n"
-          "3. Show total\n"
-          "4. Summary by category\n"
-          "5. Save and exit\n")
+    print("=== EXPENSE TRACKER ===\n")
+    for option in MenuOption:
+        print(option)
 
 def get_user_choice() -> MenuOption:
     """Prompt until the user selects a valid menu option."""
     while True:
         try:
-            choice = MenuOption(int(input(F"Enter option number (1-{len(MenuOption)}): ")))
+            choice = MenuOption(int(input(F"Enter option number ({USER_NUMBER_SHIFT}-{len(MenuOption)}): ")))
             return choice
         except ValueError:
             print("Invalid input. Please enter option from the list.")
@@ -86,7 +105,7 @@ def get_category() -> Category:
             print(f"{category.value}: {category.name}")
         try:
             user_category = Category(int(
-                input(f"Enter category number (1-{len(Category)}): ")))
+                input(f"Enter category number ({min(Category).value}-{max(Category).value}): ")))
             return user_category
         except ValueError:
             print("Invalid input. Please enter category from the list.")
@@ -126,12 +145,38 @@ def add_expense(amount: Decimal,
                    expense_date=expense_date)
 
 
-def list_expenses(expenses: list[Expense]) -> None:
+def display_expenses(expenses: list[Expense], per_page: int = 10) -> None:
     """Display all expenses or a message if the list is empty."""
     if not expenses:
         print("No expenses added.")
-    for e in expenses:
-        print(e)
+
+    current_page = 1
+    total_pages = math.ceil(len(expenses) / per_page)
+
+    while True:
+        start_index = (current_page - 1) * per_page
+        end_index = start_index + per_page
+
+        print(f"\nStrona {current_page}/{total_pages}")
+
+        for e in expenses[start_index:end_index]:
+             print(e)
+
+        for nav in Navigation:
+            print(nav.description)
+
+        try:
+            user_navigation = Navigation(int(input("Enter a number: ")))
+
+        except ValueError:
+            print("Invalid input. Please enter option from the list.")
+            continue
+        if user_navigation == Navigation.PREVIOUS:
+            current_page = max(1,current_page - 1) #wybieranie ktory jest wiekszy
+        elif user_navigation == Navigation.NEXT:
+            current_page = min(total_pages,current_page + 1)
+        elif user_navigation == Navigation.EXIT:
+            break
 
     # wyswietlic 10 i klikac enter dalej i wyswietlac kolejne 10 rezultatow
     # paginacja
@@ -184,7 +229,7 @@ def main():
                 print("Expense added successfully.")
 
             case MenuOption.LIST_EXPENSE:
-                list_expenses(expenses)
+                display_expenses(expenses)
 
             case MenuOption.SHOW_TOTAL:
                 category_totals = calculate_category_totals(expenses)
