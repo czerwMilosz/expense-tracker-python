@@ -198,7 +198,7 @@ def display_expenses(expenses: list[Expense], per_page: int = 10) -> None:
 def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal]:
     """Calculate expense totals grouped by category."""
     category_totals: dict[Category, Decimal] = {}
-    for e in expenses: #suma po kluczu
+    for e in expenses:
         category_totals[e.category] = category_totals.get(e.category, Decimal("0")) + e.amount
     return category_totals
 
@@ -269,5 +269,3 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
-#przy eksporterach popracowach z abstrakcyjnymi klasami
-# wzorzec abstrakcyjnej fabryki
