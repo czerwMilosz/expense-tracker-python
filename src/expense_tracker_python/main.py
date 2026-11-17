@@ -35,9 +35,9 @@ class Navigation(IntEnum):
     @property
     def description(self) -> str:
         return {
-            Navigation.PREVIOUS: "Poprzednia strona",
-            Navigation.NEXT: "Nastepna strona",
-            Navigation.EXIT: "Wyjscie",
+            Navigation.PREVIOUS: "Previous page",
+            Navigation.NEXT: "Next page",
+            Navigation.EXIT: "Exit",
         }[self]
 
 
@@ -124,10 +124,13 @@ def get_description() -> str:
 
 
 def get_expense_date() -> date:
-    """Prompt until the user enters a valid expense date."""
+    """Prompt for an expense date, defaulting to today if empty."""
     while True:
         try:
-            user_date = input("Enter expense date (YYYY-MM-DD): ").strip()
+            user_date = input("Enter expense date (YYYY-MM-DD, empty for today): ").strip()
+            if not user_date:
+                return date.today()
+
             converted_date = date.fromisoformat(user_date)
             return converted_date
         except ValueError:
@@ -145,41 +148,51 @@ def add_expense(amount: Decimal,
                    expense_date=expense_date)
 
 
+def display_expense_page(
+    expenses: list[Expense],
+    current_page: int,
+    total_pages: int) -> None:
+    """Display one page of expenses and its page number."""
+    print(f"\nPage {current_page}/{total_pages}")
+
+    for expense in expenses:
+        print(expense)
+
+
+def get_navigation_choice() -> Navigation:
+    """Prompt until the user selects a valid navigation option."""
+    for nav in Navigation:
+        print(f"{nav.value}: {nav.description}")
+
+    while True:
+        try:
+            return Navigation(int(input("Enter a number: ")))
+        except ValueError:
+            print("Invalid input. Please enter option from the list.")
+
+
 def display_expenses(expenses: list[Expense], per_page: int = 10) -> None:
-    """Display all expenses or a message if the list is empty."""
+    """Manage expense page navigation or display a message if empty."""
     if not expenses:
         print("No expenses added.")
+        return
 
     current_page = 1
     total_pages = math.ceil(len(expenses) / per_page)
 
     while True:
         start_index = (current_page - 1) * per_page
-        end_index = start_index + per_page
+        page_expenses = expenses[start_index:start_index + per_page]
 
-        print(f"\nStrona {current_page}/{total_pages}")
+        display_expense_page(page_expenses, current_page, total_pages)
+        navigation = get_navigation_choice()
 
-        for e in expenses[start_index:end_index]:
-             print(e)
-
-        for nav in Navigation:
-            print(nav.description)
-
-        try:
-            user_navigation = Navigation(int(input("Enter a number: ")))
-
-        except ValueError:
-            print("Invalid input. Please enter option from the list.")
-            continue
-        if user_navigation == Navigation.PREVIOUS:
-            current_page = max(1,current_page - 1) #wybieranie ktory jest wiekszy
-        elif user_navigation == Navigation.NEXT:
-            current_page = min(total_pages,current_page + 1)
-        elif user_navigation == Navigation.EXIT:
-            break
-
-    # wyswietlic 10 i klikac enter dalej i wyswietlac kolejne 10 rezultatow
-    # paginacja
+        if navigation == Navigation.EXIT:
+            return
+        elif navigation == Navigation.PREVIOUS:
+            current_page = max(1, current_page - 1)
+        elif navigation == Navigation.NEXT:
+            current_page = min(total_pages, current_page + 1)
 
 
 def calculate_category_totals(expenses: list[Expense]) -> dict[Category, Decimal]:
@@ -209,9 +222,25 @@ def display_category_totals(category_totals: dict[Category, Decimal]) -> None:
 
 
 
-def main():
+def handle_add_expense(expenses: list[Expense]) -> None:
+    """Prompt for expense details and add the expense to the list."""
+    amount = get_amount()
+    category = get_category()
+    description = get_description()
+    expense_date = get_expense_date()
+    expense = add_expense(amount, category, description, expense_date)
+    expenses.append(expense)
+    print("Expense added successfully.")
+
+
+def display_total(expenses: list[Expense]) -> None:
+    """Display the overall expense total."""
+    category_totals = calculate_category_totals(expenses)
+    print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
+
+
+def main() -> None:
     """Run the expense tracker menu loop."""
-    #jedna funkcja jedna odpowiedzialnosc
 
     expenses: list[Expense] = []
 
@@ -219,21 +248,14 @@ def main():
         display_menu()
         user_choice = get_user_choice()
         match user_choice:
-            case MenuOption.ADD_EXPENSE: #INT ENUM, MATCHING PATTERN
-                amount = get_amount()
-                category = get_category()
-                description = get_description()
-                expense_date = get_expense_date()
-                expense = add_expense(amount, category, description, expense_date)
-                expenses.append(expense)
-                print("Expense added successfully.")
+            case MenuOption.ADD_EXPENSE:
+                handle_add_expense(expenses)
 
             case MenuOption.LIST_EXPENSE:
                 display_expenses(expenses)
 
             case MenuOption.SHOW_TOTAL:
-                category_totals = calculate_category_totals(expenses)
-                print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
+                display_total(expenses)
 
             case MenuOption.SUMMARY_BY_CATEGORY:
                 category_totals = calculate_category_totals(expenses)
