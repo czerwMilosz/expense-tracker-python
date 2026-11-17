@@ -3,6 +3,8 @@ from decimal import Decimal, InvalidOperation
 from datetime import date
 from enum import IntEnum, auto
 import math
+import json
+from pathlib import Path
 
 USER_NUMBER_SHIFT = 1
 
@@ -239,6 +241,22 @@ def display_total(expenses: list[Expense]) -> None:
     print(f"\nTotal: {calculate_total(category_totals):.2f} PLN\n")
 
 
+def export_expenses_to_json(expenses: list[Expense], file_path: Path) -> None:
+    """Export expenses to a JSON file, overwriting existing contents."""
+    data = []
+    for expense in expenses:
+        expense_data = {
+            "amount": str(expense.amount),
+            "category": expense.category.name.lower(),
+            "description": expense.description,
+            "expense_date": expense.expense_date.isoformat(),
+        }
+        data.append(expense_data)
+
+    with file_path.open("w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
+
+
 def main() -> None:
     """Run the expense tracker menu loop."""
 
@@ -262,8 +280,17 @@ def main() -> None:
                 display_category_totals(category_totals)
 
             case MenuOption.SAVE_AND_EXIT:
-                print("Exiting...")
-                break
+                if not expenses:
+                    print("No expenses to save. Exiting...")
+                    break
+
+                try:
+                    export_expenses_to_json(expenses, Path("expenses.json"))
+                except OSError as error:
+                    print(f"Could not save expenses: {error}")
+                else:
+                    print("Expenses saved. Exiting...")
+                    break
 
 
 if __name__ == "__main__":
